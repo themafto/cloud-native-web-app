@@ -1,0 +1,8 @@
+
+# backendredis/requirements.txt
+
+Django==3.2
+redis
+requests
+django-hosts
+django-cors-headers

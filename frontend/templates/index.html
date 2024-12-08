@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Service</title>
+</head>
+<body>
+    <h1>Test Connections</h1>
+    <button id="test-rds-btn">Test RDS Connection</button>
+    <button id="test-redis-btn">Test Redis Connection</button>
+
+    <div id="results"></div>
+
+    <script>
+        let BACKEND_RDS_URL;
+        let BACKEND_REDIS_URL;
+
+        async function loadConfig() {
+            const response = await fetch('config.json');
+            const config = await response.json();
+            BACKEND_RDS_URL = config.BACKEND_RDS_URL;
+            BACKEND_REDIS_URL = config.BACKEND_REDIS_URL;
+        }
+
+        document.getElementById('test-rds-btn').addEventListener('click', function() {
+            fetch(BACKEND_RDS_URL)
+                .then(response => response.json())
+                .then(data => document.getElementById('results').innerText = JSON.stringify(data))
+                .catch(error => document.getElementById('results').innerText = 'Error: ' + error);
+        });
+
+        document.getElementById('test-redis-btn').addEventListener('click', function() {
+            fetch(BACKEND_REDIS_URL)
+                .then(response => response.json())
+                .then(data => document.getElementById('results').innerText = JSON.stringify(data))
+                .catch(error => document.getElementById('results').innerText = 'Error: ' + error);
+        });
+
+        window.onload = loadConfig;
+    </script>
+</body>
+</html>
