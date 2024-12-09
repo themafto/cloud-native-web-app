@@ -29,3 +29,13 @@ module "s3" {
   region = var.region
   vpc_endpoint_id = module.vpc.vpc_endpoint_id
 }
+module "rds" {
+  source = "./modules/rds"
+
+  db_instance_class     = var.db_instance_class
+  db_name               = var.db_name
+  db_password           = var.db_password
+  db_username           = var.db_username
+  rds_security_group_id = module.vpc.rds_security_group_id
+  db_subnet_group_name  = module.vpc.db_subnet_group_name
+}

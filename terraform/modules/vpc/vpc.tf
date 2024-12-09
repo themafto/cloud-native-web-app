@@ -72,3 +72,30 @@ resource "aws_vpc_endpoint" "s3_endpoint" {
   vpc_id       = aws_vpc.project2_v2.id
   service_name = "com.amazonaws.${var.region}.s3"
 }
+resource "aws_security_group" "rds_sg" {
+  name        = "rds_security_group"
+  description = "Security group for RDS instance"
+  vpc_id      = aws_vpc.project2_v2.id
+
+  ingress {
+    description      = "PostgreSQL access from your IP"
+    from_port        = 5432
+    to_port          = 5432
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "project2-v2-db-subnet-group"
+  subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
+  tags = {
+    Name = "Project2 v2 DB Subnet Group"
+  }
+}
