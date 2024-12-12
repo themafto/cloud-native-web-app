@@ -8,27 +8,27 @@ terraform {
     }
   }
 }
+
 provider "aws" {
   region = var.region
 }
-module "ecrRepo" {
-  source = "./modules/ecr"
 
-  ecr_repo_name = var.ecr_repo_name
-  ecr_rds_name = var.ecr_rds_name
-  ecr_redis_name = var.ecr_redis_name
-}
 
 
 module "vpc" {
   source = "./modules/vpc"
-  region = var.region
+
+  region               = var.region
+  dns_zone_id          = var.dns_zone_id
+  acm_certificate_ssl  = var.acm_certificate_ssl
 }
+
 module "s3" {
-  source = "./modules/s3"
-  region = var.region
-  vpc_endpoint_id = module.vpc.vpc_endpoint_id
+  source           = "./modules/s3_cloudfront"
+  region           = var.region
+  vpc_endpoint_id  = module.vpc.vpc_endpoint_id
 }
+
 module "rds" {
   source = "./modules/rds"
 
@@ -38,4 +38,21 @@ module "rds" {
   db_username           = var.db_username
   rds_security_group_id = module.vpc.rds_security_group_id
   db_subnet_group_name  = module.vpc.db_subnet_group_name
+}
+
+module "ecs" {
+  source = "./modules/ecs"
+
+  db_name                         = var.db_name
+  db_password                     = var.db_password
+  db_username                     = var.db_username
+  rds_endpoint                    = module.rds.rds_endpoint
+  rds_image                       = var.rds_image
+  aws_lb_target_group_rds_tg_arn  = module.vpc.aws_lb_target_group_rds_tg
+  private_subnet_a_id             = module.vpc.private_subnet_a_id
+  private_subnet_b_id             = module.vpc.private_subnet_b_id
+  rds_security_group_id           = module.vpc.rds_security_group_id
+  rds_id                          = module.rds.rds_id
+  frontend_domain                 = var.frontend_domain
+  main_domain                     = var.main_domain
 }

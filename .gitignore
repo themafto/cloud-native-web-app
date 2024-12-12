@@ -15,6 +15,7 @@ __pycache__/
 terraform.tfvars.auto.tfvars
 terraform.tfvars
 local.tf
+locals.tf
 
 # Виртуальные окружения
 .venv/
