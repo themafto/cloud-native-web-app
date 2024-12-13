@@ -52,14 +52,14 @@ resource "aws_ecs_task_definition" "main" {
 
                 },
                   {
-                   name   = "DB_PASS",
+                   name   = "DB_PASSWORD",
                     value = var.db_password
 
                 },
 
                   {
                     name  = "CORS_ALLOWED_ORIGINS"
-                    value = "https://${var.frontend_domain}.${var.main_domain}"
+                    value = var.main_domain
 
                   }
             ]

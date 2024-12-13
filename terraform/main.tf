@@ -21,12 +21,15 @@ module "vpc" {
   region               = var.region
   dns_zone_id          = var.dns_zone_id
   acm_certificate_ssl  = var.acm_certificate_ssl
+  cloudfront_domain_name = module.s3.cloudfront_domain_name
+  dns_zone_id_cloudfront = var.dns_zone_id_cloudfront
 }
 
 module "s3" {
-  source           = "./modules/s3_cloudfront"
-  region           = var.region
-  vpc_endpoint_id  = module.vpc.vpc_endpoint_id
+  source              = "./modules/s3_cloudfront"
+  region              = var.region
+  vpc_endpoint_id     = module.vpc.vpc_endpoint_id
+  acm_certificate_ssl_us = var.acm_certificate_ssl_us
 }
 
 module "rds" {
@@ -53,6 +56,7 @@ module "ecs" {
   private_subnet_b_id             = module.vpc.private_subnet_b_id
   rds_security_group_id           = module.vpc.rds_security_group_id
   rds_id                          = module.rds.rds_id
-  frontend_domain                 = var.frontend_domain
   main_domain                     = var.main_domain
+  sub1_domain                     = var.sub1_domain
+  sub2_domain                     = var.sub2_domain
 }

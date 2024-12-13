@@ -31,7 +31,9 @@ variable "rds_id" {
 }
 variable "main_domain" {
 }
-variable "frontend_domain" {
-  type = list(string)
+variable "sub1_domain" {
 }
+variable "sub2_domain" {
+}
+
 

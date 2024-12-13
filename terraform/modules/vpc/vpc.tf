@@ -151,7 +151,7 @@ resource "aws_lb_target_group" "rds_tg" {
     healthy_threshold   = 2
     interval            = 30
     matcher             = "200"
-    path                = "/" # Путь для проверки здоровья RDS
+    path                = "/test_connection/" # Путь для проверки здоровья RDS
     port                = "8001"
     protocol            = "HTTP"
     timeout             = 5
@@ -241,7 +241,7 @@ resource "aws_lb_listener" "https" {
 
 resource "aws_lb_listener_rule" "rds_rule" {
   listener_arn = aws_lb_listener.https.arn
-  priority     = 1
+  priority     = 5
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.rds_tg.arn
@@ -256,7 +256,7 @@ resource "aws_lb_listener_rule" "rds_rule" {
 }
 resource "aws_lb_listener_rule" "redis_rule" {
   listener_arn = aws_lb_listener.https.arn
-  priority     = 2
+  priority     = 10
 
   action {
     type             = "forward"

@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "site_origin" {
   bucket          = "site-origin-${random_id.bucket_suffix.hex}"# Добавляем случайный суффикс }
   tags            = {
     Environment   = "Dev"
-    force_destroy = false # Осторожно в продакшене!(if true)
+    force_destroy = true # Осторожно в продакшене!(if true)
   }
 }
 resource "random_id" "bucket_suffix" {
@@ -23,32 +23,22 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site_origin" {
     }
   }
 }
+
 resource "aws_s3_bucket_versioning" "site_origin" {
   bucket = aws_s3_bucket.site_origin.bucket
   versioning_configuration {
     status = "Enabled"
   }
 }
-resource "aws_s3_object" "content" {
-  depends_on = [aws_s3_bucket.site_origin]
-  bucket = aws_s3_bucket.site_origin.bucket
-  key    = "index.html"
-  source = "frontend/templates/index.html"
-  server_side_encryption = "AES256"
-  content_type = "text/html"
-}
-resource "aws_cloudfront_origin_access_control" "site_access" {
-  name = "security_pillar100_cf_s3_oac"
-  origin_access_control_origin_type = "s3"
-  signing_behavior = "always"
-  signing_protocol = "sigv4"
-}
-resource "aws_cloudfront_distribution" "site_access" {
 
-  depends_on = [
-  aws_s3_bucket.site_origin,
-  aws_cloudfront_origin_access_control.site_access
-  ]
+resource "aws_cloudfront_origin_access_control" "site_access" {
+  name                              = "security_pillar100_cf_s3_oac"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "site_access" {
 
   aliases = ["themafto.com"]
 
@@ -56,9 +46,9 @@ resource "aws_cloudfront_distribution" "site_access" {
   default_root_object = "index.html"
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = aws_s3_bucket.site_origin.id
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id       = aws_s3_bucket.site_origin.id
     viewer_protocol_policy = "https-only"
 
     forwarded_values {
@@ -70,9 +60,9 @@ resource "aws_cloudfront_distribution" "site_access" {
   }
 
   origin {
-    domain_name = aws_s3_bucket.site_origin.bucket_domain_name
-    origin_id   = aws_s3_bucket.site_origin.id
-    origin_access_control_id = aws_s3_bucket.site_origin.id
+    domain_name              = aws_s3_bucket.site_origin.bucket_domain_name
+    origin_id                = aws_s3_bucket.site_origin.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.site_access.id
   }
   restrictions {
     geo_restriction {
@@ -81,7 +71,9 @@ resource "aws_cloudfront_distribution" "site_access" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = var.acm_certificate_ssl_us # Замените на ваш ARN сертификата
+    ssl_support_method  = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
