@@ -22,6 +22,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      - name: Debug Environment Variables
+        run: |
+          echo "Cluster Name: $CLUSTER_NAME"
+          echo "Service Name: $RDS_SERVICE_NAME"
+          echo "AWS Region: $AWS_REGION"
+
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -44,7 +51,7 @@ jobs:
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster ${{ env.CLUSTER_NAME }} \
-            --service ${{ env.SERVICE_NAME }} \
-            --force-new-deployment \
-            aws ecs update-service --cluster $CLUSTER_NAME --service $RDS_SERVICE_NAME --force-new-deployment --container-image-overrides containerName=$RDS_SERVICE_NAME,image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
+              --cluster ${{ env.CLUSTER_NAME }} \
+              --service ${{ env.SERVICE_NAME }} \
+              --force-new-deployment \
+              --container-image-overrides containerName=${{ env.SERVICE_NAME }},image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
