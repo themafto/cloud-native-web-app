@@ -12,7 +12,7 @@ jobs:
 
     env:
       CLUSTER_NAME: main-esc-cluster
-      SERVICE_NAME: backend-rds-service  # More descriptive service name
+      SERVICE_NAME: rds
       AWS_REGION: eu-central-1
       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
