@@ -1,5 +1,5 @@
 {
-    "BACKEND_RDS_URL": "http://<public-rds-endpoint>:<port>/test_connection/",
-    "BACKEND_REDIS_URL": "http://<public-redis-endpoint>:<port>/test_connection/"
+    "BACKEND_RDS_URL": "https://api.themafto.com/test_connection/",
+    "BACKEND_REDIS_URL": "https://cache.themafto.com/test_connection/"
   }
-  
+
