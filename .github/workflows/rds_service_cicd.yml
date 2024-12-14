@@ -17,7 +17,6 @@ jobs:
       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
     steps:
-
       - name: Install AWS CLI
       - run: |
           - sudo apt-get update
@@ -48,4 +47,4 @@ jobs:
             --cluster ${{ env.CLUSTER_NAME }} \
             --service ${{ env.SERVICE_NAME }} \
             --force-new-deployment \
-            aws ecs update-service --cluster $CLUSTER_NAME --service $RDS_SERVICE_NAME --force-new-deployment
+            aws ecs update-service --cluster $CLUSTER_NAME --service $RDS_SERVICE_NAME --force-new-deployment --container-image-overrides containerName=$RDS_SERVICE_NAME,image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
