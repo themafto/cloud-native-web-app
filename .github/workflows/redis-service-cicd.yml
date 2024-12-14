@@ -1,0 +1,46 @@
+name: CI/CD for ECS and ECR
+
+on:
+  push:
+    paths:
+      - 'backend_redis/**'
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Docker Image
+    runs-on: ubuntu-latest
+
+    env:
+      CLUSTER_NAME: main-esc-cluster
+      REDIS_SERVICE_NAME: redis
+      AWS_REGION: eu-central-1
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }} # Define ECR_REPOSITORY
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 4. Build & Push Docker image
+      - name: Build & Push Docker image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }} backend_redis -f backend_redis/Dockerfile
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
+
+      # 5. Deploy RDS to ECS (actually, deploy backend service to ECS)
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service --cluster $CLUSTER_NAME --service $REDIS_SERVICE_NAME --force-new-deployment --container-image-overrides containerName=$REDIS_SERVICE_NAME,image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
