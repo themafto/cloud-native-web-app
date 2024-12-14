@@ -9,6 +9,7 @@ jobs:
   build-and-deploy:
     name: Build and Deploy Docker Image
     runs-on: ubuntu-latest
+    environment: production
 
     env:
       CLUSTER_NAME: main-esc-cluster
@@ -47,42 +48,9 @@ jobs:
         run: |
           docker build -t ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }} -f backend_rds/Dockerfile backend_rds 
           docker push ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}
+          echo "::set-output name=image::${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}" # Сохраняем имя образа
 
-      - name: Update ECS Task Definition
-        id: update-task-def
-        env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Deploy to ECS
         run: |
-            
-            CURRENT_TASK_DEFINITION=$(aws ecs describe-task-definition \
-            --task-definition your-task-definition-name \
-            --query 'taskDefinition')
-            
-            
-            NEW_TASK_DEFINITION=$(echo "$CURRENT_TASK_DEFINITION" | \
-            jq --arg IMAGE_URI "${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}" \
-            '.containerDefinitions[0].image=$IMAGE_URI | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .registeredAt, .registeredBy)')
-            
-            
-            echo "$NEW_TASK_DEFINITION" > new-task-def.json
-            aws ecs register-task-definition --cli-input-json file://new-task-def.json
-
-            - name: Update ECS Service
-              env:
-                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                AWS_REGION: ${{ secrets.AWS_REGION }}
-              run: |
-                
-                LATEST_TASK_DEFINITION=$(aws ecs describe-task-definition \
-                  --task-definition your-task-definition-name \
-                  --query 'taskDefinition.taskDefinitionArn' \
-                  --output text)
-                
-                
-                aws ecs update-service \
-                  --cluster your-ecs-cluster-name \
-                  --service your-ecs-service-name \
-                  --task-definition "$LATEST_TASK_DEFINITION"
+            aws ecs update-service --cluster main-esc-cluster --service rds --force-new-deployment --desired-count 1 \
+              --container-name rds --image ${{ steps.build-image.outputs.image }}
