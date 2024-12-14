@@ -1,7 +1,7 @@
 """
 backendrds/backendrds/wsgi.py
 
-WSGI config for backendrds project .
+WSGI config for backendrds project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
