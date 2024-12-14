@@ -33,8 +33,8 @@ jobs:
 
       - name: Build & Push Docker image
         run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ github.sha }} -f backend_rds/Dockerfile backend_rds 
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/repo/rsd:${{ github.sha }} -f backend_rds/Dockerfile backend_rds 
+          docker push ${{ steps.login-ecr.outputs.registry }}/repo/rsd:${{ github.sha }}
 
       - name: Deploy to ECS
         run: |
