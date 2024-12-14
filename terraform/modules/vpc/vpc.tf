@@ -70,10 +70,10 @@ resource "aws_route_table_association" "public_subnet_association_b" {
 resource "aws_eip" "nat_eip" {
   vpc = true
 }
-# Nat Gateway (привязываем обязательно к публичному сабнету для доступа в интернет)
+# Nat Gateway (must be public subnet)
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public_subnet_a.id # Или public_subnet_b.id - выбирайте одну
+  subnet_id     = aws_subnet.public_subnet_a.id # Or public_subnet_b.id - choose one!
 
   tags = {
     Name = "nat-gateway"
@@ -132,6 +132,35 @@ resource "aws_security_group" "rds_sg" {
     cidr_blocks      = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group" "redis_sg" {
+  name        = "redis_security_group"
+  description = "Security group for Redis"
+  vpc_id      = aws_vpc.project2_v2.id
+
+  ingress {
+    description      = "Redis access from your IP"
+    from_port        = 8002
+    to_port          = 8002
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+  ingress {
+    description      = "Redis access from your IP"
+    from_port        = 6379
+    to_port          = 6379
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "project2-v2-db-subnet-group"
   subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
@@ -143,7 +172,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 # ip target group( tg instance --> for ec2)
 resource "aws_lb_target_group" "rds_tg" {
   name        = local.rds_name
-  port        = local.port_rds #????
+  port        = local.port_rds
   protocol    = "HTTP"
   target_type = "ip" # Целевой тип - IP-адреса (для Fargate)
   vpc_id      = aws_vpc.project2_v2.id
@@ -151,7 +180,7 @@ resource "aws_lb_target_group" "rds_tg" {
     healthy_threshold   = 2
     interval            = 30
     matcher             = "200"
-    path                = "/test_connection/" # Путь для проверки здоровья RDS
+    path                = "/test_connection/"
     port                = "8001"
     protocol            = "HTTP"
     timeout             = 5
@@ -162,14 +191,14 @@ resource "aws_lb_target_group" "redis_tg" {
   name        = "redis-tg"
   port        = 8002
   protocol    = "HTTP"
-  target_type = "ip" # Целевой тип - IP-адреса (для Fargate)
+  target_type = "ip"
   vpc_id      = aws_vpc.project2_v2.id
    health_check {
-      path                = "/"
+      path                = "/test_connection/"
       matcher             = "200"
       interval            = 30
-      port                = "8002" # Порт, на котором Redis слушает
-      protocol            = "HTTP" #  Скорее всего, Redis использует TCP
+      port                = "8002"
+      protocol            = "HTTP"
       timeout             = 5
       healthy_threshold   = 2
       unhealthy_threshold = 2
@@ -178,16 +207,16 @@ resource "aws_lb_target_group" "redis_tg" {
 resource "aws_alb" "alb-for-ecs" {
   name               = "alb-for-ecs"
   internal           = false # false - внешний ALB, true - внутренний
-  load_balancer_type = "application" # application - для HTTP/HTTPS
-  security_groups    = [aws_security_group.alb_sg.id] # Security Group для ALB
-  subnets            = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id] # публичные подсети
+  load_balancer_type = "application" # application - for HTTP/HTTPS
+  security_groups    = [aws_security_group.alb_sg.id] # Security Group for ALB
+  subnets            = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
   description = "Security group for ALB"
   vpc_id      = aws_vpc.project2_v2.id
 
-  # Разрешаем HTTP доступ из любого места (для тестирования)
+
   ingress {
     from_port   = 80
     to_port     = 80

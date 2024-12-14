@@ -1,9 +1,6 @@
-output "frontend_url" {
-  value = aws_ecr_repository.frontend_repo
+output "url_rds" {
+  value = aws_ecr_repository.rds.repository_url
 }
-output "rds_url" {
-  value = aws_ecr_repository.rds_repo
-}
-output "redis_url" {
-  value = aws_ecr_repository.redis_repo
+output "url_redis" {
+  value = aws_ecr_repository.redis.repository_url
 }

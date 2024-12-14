@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "site_origin" {
-  bucket          = "site-origin-${random_id.bucket_suffix.hex}"# Добавляем случайный суффикс }
+  bucket          = "site-origin-${random_id.bucket_suffix.hex}"
   tags            = {
     Environment   = "Dev"
     force_destroy = true # Осторожно в продакшене!(if true)
@@ -71,7 +71,7 @@ resource "aws_cloudfront_distribution" "site_access" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = var.acm_certificate_ssl_us # Замените на ваш ARN сертификата
+    acm_certificate_arn = var.acm_certificate_ssl_us
     ssl_support_method  = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }

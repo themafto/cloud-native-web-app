@@ -1,9 +1,17 @@
-resource "aws_ecr_repository" "frontend_repo" {
-  name = var.ecr_repo_name
+resource "aws_ecr_repository" "rds" {
+  name                 = "repo/rds"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
-resource "aws_ecr_repository" "rds_repo" {
-  name = var.ecr_rds_name
+resource "aws_ecr_repository" "redis" {
+  name                 = "repo/redis"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
-resource "aws_ecr_repository" "redis_repo" {
-  name = var.ecr_redis_name
-}
+

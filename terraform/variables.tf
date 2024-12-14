@@ -22,7 +22,7 @@ variable "db_instance_class" {
   type = string
   description = "The instance class for the database"
 }
-variable "rds_image" {
+variable "rds_image_tag" {
   description = "RDS Database Image"
 }
 variable "dns_zone_id" {
@@ -41,4 +41,10 @@ variable "acm_certificate_ssl_us" {
   description = "ACM certificate ssl in US"
 }
 variable "dns_zone_id_cloudfront" {}
+variable "redis_image" {
+  description = "Redis Docker Image"
+}
 
+variable "rds_repo"{
+  type = string
+}
