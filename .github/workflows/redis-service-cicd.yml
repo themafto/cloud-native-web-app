@@ -40,30 +40,37 @@ jobs:
           docker build -t ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }} backend_redis -f backend_redis/Dockerfile
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
 
-      - name: Fetch current task definition
+       # 5. Download task definition
+      - name: Download task definition
         run: |
           aws ecs describe-task-definition \
             --task-definition redis-task-definition \
             --query taskDefinition \
             --output json > task-definition.json
 
-      - name: Update container image
+       # 6. checking task definition file
+      - name: Debug task definition
         run: |
-          jq '.containerDefinitions[0].image="ECR_REPOSITORY/repo/redis:${{ github.sha }}"' \
-          task-definition.json > new-task-definition.json
+          echo "Task definition content:"
+          cat task-definition.json
 
-      - name: Register new task definition
-        id: register-task
-        run: |
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-definition.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          echo "task_definition_arn=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+        # 7. Update our task definition with new image
+      - name: Fill in new image ID in task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: rds
+          image: ${{ steps.login-ecr.outputs.registry }}/repo/redis:${{ github.sha }}
+
+      # 8. Deploy to ecs
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: rds
+          cluster: main-esc-cluster
 
       - name: Update ECS service
         run: |
-          aws ecs update-service \
-            --cluster main-esc-cluster \
-            --service redis \
-            --task-definition ${{ env.task_definition_arn }}
+          aws ecs update-service --cluster main-esc-cluster --service redis --force-new-deployment --region ${{ env.AWS_REGION }}

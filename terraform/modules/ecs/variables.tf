@@ -14,10 +14,7 @@ variable "db_name" {
 variable "rds_repository" {
   description = "Ecr repository"
 }
-variable "image_tag_rds" {
-  description = "Deployment RDS tag(commit)"
-  type        = string
-}
+
 #vpc
 variable "private_subnet_a_id" {
   description = "rds private subnet id"

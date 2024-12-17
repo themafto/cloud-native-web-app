@@ -27,7 +27,7 @@ resource "aws_ecs_task_definition" "rds" {
   container_definitions = jsonencode([
   {
     name         = "rds"
-    image        = "${var.rds_repository}:${var.image_tag_rds}"
+    image        = "${var.rds_repository}:${data.external.rds_get_latest_image_tag.result.tag}"
     essential    = true
     portMappings = [
       {
@@ -165,4 +165,11 @@ resource "aws_ecs_service" "redis" {
     container_port   = local.container_port_redis
   }
    depends_on = [aws_cloudwatch_log_group.redis]
+}
+
+data "external" "rds_get_latest_image_tag" {
+  program = ["C:/Windows/System32/wsl.exe", "/mnt/host/d/DEVOPS/Project-2v2/pet-terraform-project/terraform/modules/ecs/rds-get-latest-tag.sh"]# Replace with your script path
+}
+data "external" "redis_get_latest_image_tag" {
+  program = ["C:/Windows/System32/wsl.exe", "/mnt/host/d/DEVOPS/Project-2v2/pet-terraform-project/terraform/modules/ecs/redis-get-latest-tag.sh"]# Replace with your script path
 }

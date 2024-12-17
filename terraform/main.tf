@@ -69,7 +69,6 @@ module "ecs" {
   aws_lb_target_group_redis_tg_arn = module.vpc.aws_lb_target_group_redis_tg
   redis_image                      = var.redis_image
   redis_security_group_id          = module.vpc.redis_security_group_id
-  image_tag_rds                    = var.rds_image_tag
   rds_repository                   = var.rds_repo
   redis_endpoint_host              = module.elasticache.redis_endpoint
 }
