@@ -51,12 +51,13 @@ jobs:
             --output json > task-definition.json
 
 
-      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+      - name: Render and update task definition
         id: render-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
-          container-name: rds
-          image: ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}
+            task-definition: task-definition.json
+            container-name: rds
+            image: ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}
 
       - name: Register new task definition
         id: register-task-definition
@@ -70,4 +71,4 @@ jobs:
           aws ecs update-service \
             --cluster main-esc-cluster \
             --service rds \
-            --task-definition ${{ env.task_definition_arn }}
+            --task-definition ${{ steps.register-task-definition.outputs.new_task_definition_arn }}
