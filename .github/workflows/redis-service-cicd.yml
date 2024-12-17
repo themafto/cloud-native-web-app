@@ -43,7 +43,7 @@ jobs:
       - name: Fetch current task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition redis \
+            --task-definition redis-task-definition \
             --query taskDefinition \
             --output json > task-definition.json
 
