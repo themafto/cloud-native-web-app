@@ -48,6 +48,7 @@ jobs:
         run: |
           aws ecs describe-task-definition \
             --task-definition main-task-definition \
+            --query 'taskDefinition' \
             --output json > task-definition.json
 
 
