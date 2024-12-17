@@ -50,6 +50,9 @@ jobs:
             --task-definition main-task-definition \
             --query 'taskDefinition' \
             --output json > task-definition.json
+          echo "Task definition content:"
+          cat task-definition.json
+
 
 
       - name: Render and update task definition
