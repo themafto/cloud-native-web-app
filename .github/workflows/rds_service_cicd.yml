@@ -44,25 +44,26 @@ jobs:
           echo "::set-output name=image::${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}" # Сохраняем имя образа
 
       - name: Fetch current task definition
+        id: describe-task-definition
         run: |
           aws ecs describe-task-definition \
             --task-definition main-task-definition \
-            --query taskDefinition \
             --output json > task-definition.json
 
-      - name: Update container image
-        run: |
-          jq '.containerDefinitions[0].image="${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}"' \
-          task-definition.json > new-task-definition.json
+
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render-task-definition
+        with:
+          task-definition: task-definition.json
+          container-name: rds
+          image: ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}
 
       - name: Register new task definition
-        id: register-task
+        id: register-task-definition
         run: |
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-definition.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          echo "task_definition_arn=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+          aws ecs register-task-definition --cli-input-json file://rendered-task-definition.json \
+            --query 'taskDefinition.taskDefinitionArn' --output text
+          echo "::set-output name=new_task_definition_arn::$NEW_TASK_DEF_ARN"
 
       - name: Update ECS service
         run: |
