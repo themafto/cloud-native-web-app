@@ -40,7 +40,30 @@ jobs:
           docker build -t ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }} backend_redis -f backend_redis/Dockerfile
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
 
-      # 5. Deploy RDS to ECS (actually, deploy backend service to ECS)
-      - name: Deploy to ECS
+      - name: Fetch current task definition
         run: |
-          aws ecs update-service --cluster $CLUSTER_NAME --service $REDIS_SERVICE_NAME --force-new-deployment --container-image-overrides containerName=$REDIS_SERVICE_NAME,image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}
+          aws ecs describe-task-definition \
+            --task-definition redis \
+            --query taskDefinition \
+            --output json > task-definition.json
+
+      - name: Update container image
+        run: |
+          jq '.containerDefinitions[0].image="ECR_REPOSITORY/repo/redis:${{ github.sha }}"' \
+          task-definition.json > new-task-definition.json
+
+      - name: Register new task definition
+        id: register-task
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-definition.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "task_definition_arn=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster main-esc-cluster \
+            --service redis \
+            --task-definition ${{ env.task_definition_arn }}

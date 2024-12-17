@@ -23,13 +23,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
-      - name: Debug Environment Variables
-        run: |
-          echo "Cluster Name: $CLUSTER_NAME"
-          echo "Service Name: $RDS_SERVICE_NAME"
-          echo "AWS Region: $AWS_REGION"
-
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -50,7 +43,30 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}
           echo "::set-output name=image::${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ github.sha }}" # Сохраняем имя образа
 
-      - name: Deploy to ECS
+      - name: Fetch current task definition
         run: |
-            aws ecs update-service --cluster main-esc-cluster --service rds --force-new-deployment --desired-count 1 \
-              --container-name rds --image ${{ steps.build-image.outputs.image }}
+          aws ecs describe-task-definition \
+            --task-definition rds \
+            --query taskDefinition \
+            --output json > task-definition.json
+
+      - name: Update container image
+        run: |
+          jq '.containerDefinitions[0].image="${{ steps.login-ecr.outputs.registry }}/repo/rds:${{ github.sha }}"' \
+          task-definition.json > new-task-definition.json
+
+      - name: Register new task definition
+        id: register-task
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-definition.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "task_definition_arn=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster main-esc-cluster \
+            --service rds \
+            --task-definition ${{ env.task_definition_arn }}
