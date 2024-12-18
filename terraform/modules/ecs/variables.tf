@@ -40,14 +40,14 @@ variable "sub1_domain" {
 }
 variable "sub2_domain" {
 }
-variable "redis_image" {
-  description = "Redis Docker Image"
-}
 variable "redis_security_group_id" {
   description = "Redis Security Group for Redis"
 }
 variable "redis_endpoint_host" {
   description = "Redis host to connect Redis"
+}
+variable "redis_repository" {
+  description = "Your Repo Repository for ECS"
 }
 
 

@@ -1,7 +1,7 @@
-
 variable "region" {
   description = "AWS region name"
 }
+
 #RDS
 variable "db_password" {
   type = string
@@ -25,6 +25,7 @@ variable "db_instance_class" {
 variable "rds_image_tag" {
   description = "RDS Database Image"
 }
+
 variable "dns_zone_id" {
   description = "Route53 zone id"
 }
@@ -41,10 +42,12 @@ variable "acm_certificate_ssl_us" {
   description = "ACM certificate ssl in US"
 }
 variable "dns_zone_id_cloudfront" {}
-variable "redis_image" {
+
+variable "redis_repo" {
   description = "Redis Docker Image"
 }
 
 variable "rds_repo"{
   type = string
 }
+

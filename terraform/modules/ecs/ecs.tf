@@ -13,6 +13,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
     }]
   })
 }
+
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = local.policy_arn
@@ -20,10 +21,10 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
 
 #ECS cluster
 resource "aws_ecs_cluster" "main" {
-  name = "main-esc-cluster"
+  name = local.ecs_cluster_name
 }
 resource "aws_ecs_task_definition" "rds" {
-  family                   = "main-task-definition"
+  family                   = local.family_rds
   container_definitions = jsonencode([
   {
     name         = "rds"
@@ -73,17 +74,18 @@ resource "aws_ecs_task_definition" "rds" {
   memory                   = local.memory        #  Память в мегабайтах
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 }
+
 resource "aws_ecs_task_definition" "redis" {
-  family                   = "redis-task-definition"
+  family                   = local.family_redis
   container_definitions = jsonencode([
     {
     name         = "redis"
-    image        = var.redis_image
+    image        = "${var.redis_repository}:${data.external.redis_get_latest_image_tag.result.tag}"
     essential    = true
     portMappings = [
       {
-        containerPort = 8002
-        hostPort      = 8002
+        containerPort = local.containerPort_redis
+        hostPort      = local.hostPort_redis
       }
     ]
     environment = [
@@ -93,7 +95,7 @@ resource "aws_ecs_task_definition" "redis" {
       },
       {
         name  = "REDIS_PORT"
-        value = "6379"
+        value = local.redis_port
       },
       {
         name  = "CORS_ALLOWED_ORIGINS"
@@ -118,14 +120,17 @@ resource "aws_ecs_task_definition" "redis" {
 }
 
 data     "aws_region" "current" {}
+
 resource "aws_cloudwatch_log_group" "rds" {
   name              = "/ecs/my-service-rds"
   retention_in_days = local.retention_in_days
 }
+
 resource "aws_cloudwatch_log_group" "redis" {
   name              = "/ecs/my-service-redis"
   retention_in_days = local.retention_in_days
 }
+
 resource "aws_ecs_service" "rds" {
   name            = "rds"
   cluster         = aws_ecs_cluster.main.id
@@ -146,6 +151,7 @@ resource "aws_ecs_service" "rds" {
   }
    depends_on = [aws_cloudwatch_log_group.rds]
 }
+
 resource "aws_ecs_service" "redis" {
   name            = "redis"
   cluster         = aws_ecs_cluster.main.id
@@ -168,8 +174,9 @@ resource "aws_ecs_service" "redis" {
 }
 
 data "external" "rds_get_latest_image_tag" {
-  program = ["C:/Windows/System32/wsl.exe", "/mnt/host/d/DEVOPS/Project-2v2/pet-terraform-project/terraform/modules/ecs/rds-get-latest-tag.sh"]# Replace with your script path
+  program = ["bash", "${path.module}/rds-get-latest-tag.sh"]# Replace with your script path
 }
+
 data "external" "redis_get_latest_image_tag" {
-  program = ["C:/Windows/System32/wsl.exe", "/mnt/host/d/DEVOPS/Project-2v2/pet-terraform-project/terraform/modules/ecs/redis-get-latest-tag.sh"]# Replace with your script path
+  program = ["bash", "${path.module}/redis-get-latest-tag.sh"]# Replace with your script path
 }

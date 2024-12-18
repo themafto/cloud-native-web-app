@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "site_origin" {
   bucket          = "site-origin-${random_id.bucket_suffix.hex}"
   tags            = {
     Environment   = "Dev"
-    force_destroy = true # Осторожно в продакшене!(if true)
+    force_destroy = false # Be careful with production!(if true)
   }
 }
 resource "random_id" "bucket_suffix" {
@@ -25,7 +25,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site_origin" {
 }
 
 resource "aws_s3_bucket_versioning" "site_origin" {
-  bucket = aws_s3_bucket.site_origin.bucket
+  bucket   = aws_s3_bucket.site_origin.bucket
   versioning_configuration {
     status = "Enabled"
   }
@@ -40,10 +40,10 @@ resource "aws_cloudfront_origin_access_control" "site_access" {
 
 resource "aws_cloudfront_distribution" "site_access" {
 
-  aliases = ["themafto.com"]
+  aliases = local.aliases
 
   enabled         = true
-  default_root_object = "index.html"
+  default_root_object = local.default_root_object
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
@@ -71,9 +71,9 @@ resource "aws_cloudfront_distribution" "site_access" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = var.acm_certificate_ssl_us
-    ssl_support_method  = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    acm_certificate_arn      = var.acm_certificate_ssl_us
+    ssl_support_method       = local.ssl_support_method
+    minimum_protocol_version = local.minimum_protocol_version
   }
 }
 
@@ -90,21 +90,21 @@ data "aws_iam_policy_document" "site_origin" {
   ]
 
   statement {
-    sid    = "s3_cloudfront_static_website"
-    effect = "Allow"
+    sid     = "s3_cloudfront_static_website"
+    effect  = "Allow"
     actions = [
       "s3:GetObject",
     ]
 
     principals {
       identifiers = ["cloudfront.amazonaws.com"]
-      type = "Service"
+      type        = "Service"
     }
-    resources = ["arn:aws:s3:::${aws_s3_bucket.site_origin.bucket}/*"]
+    resources     = ["arn:aws:s3:::${aws_s3_bucket.site_origin.bucket}/*"]
     condition {
-      test     = "StringEquals"
-      values = [aws_cloudfront_distribution.site_access.arn]
-      variable = "AWS:SourceARN"
+      test        = "StringEquals"
+      values      = [aws_cloudfront_distribution.site_access.arn]
+      variable    = "AWS:SourceARN"
     }
 
 
