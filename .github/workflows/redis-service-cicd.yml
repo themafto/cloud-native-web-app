@@ -1,4 +1,4 @@
-name: CI/CD for ECS and ECR
+name: CI/CD for redis_backend - ECS and ECR
 
 on:
   push:
