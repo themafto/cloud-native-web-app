@@ -243,7 +243,7 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type = "redirect" # Редирект на HTTPS
+    type = "redirect" # redirect to HTTPS
     redirect {
       port        = "443"
       protocol    = "HTTPS"
@@ -259,7 +259,7 @@ resource "aws_lb_listener" "https" {
   certificate_arn   = var.acm_certificate_ssl
 
   default_action {
-    type = "fixed-response" # Дефолтное действие для HTTPS
+    type = "fixed-response" # default
     fixed_response {
       content_type = "text/plain"
       message_body = "Default HTTPS action"

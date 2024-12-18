@@ -50,4 +50,5 @@ variable "redis_repo" {
 variable "rds_repo"{
   type = string
 }
+variable "terraform_bucket_state" {}
 
