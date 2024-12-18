@@ -8,7 +8,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = var.terraform_bucket_state
+    bucket         = var.terraform_bucket_state # s3 bucket HAVE TO BE CREATED BEFORE 'terraform apply'!!!!!!!!!!!!!
     key            = "terraform.tfstate"
     region         = "eu-central-1"
     encrypt        = true
