@@ -39,7 +39,7 @@ jobs:
       - name: Build & Push Docker image
         run: |
           docker build -t ${{ steps.login-ecr.outputs.registry }}/repo/redis:${{ github.sha }} backend_redis -f backend_redis/Dockerfile
-          docker push ${{ steps.login-ecr.outputs.registry }}//repo/redis:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/repo/redis:${{ github.sha }}
 
        # 5. Download task definition
       - name: Download task definition
