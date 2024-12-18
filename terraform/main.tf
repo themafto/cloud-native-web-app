@@ -7,6 +7,12 @@ terraform {
       version = "~> 4.0"
     }
   }
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket-32432"
+    key            = "terraform.tfstate"
+    region         = "eu-central-1"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -67,8 +73,9 @@ module "ecs" {
   sub1_domain                      = var.sub1_domain
   sub2_domain                      = var.sub2_domain
   aws_lb_target_group_redis_tg_arn = module.vpc.aws_lb_target_group_redis_tg
-  redis_image                      = var.redis_image
   redis_security_group_id          = module.vpc.redis_security_group_id
   rds_repository                   = var.rds_repo
-  redis_endpoint_host              = module.elasticache.redis_endpoint
+  redis_endpoint_host              = module.elasticache.elasticache_endpoint
+  redis_repository                 = var.redis_repo
 }
+
