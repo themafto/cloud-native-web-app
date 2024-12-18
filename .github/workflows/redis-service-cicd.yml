@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'backend_redis/**'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
