@@ -61,7 +61,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: rds
+          container-name: redis
           image: ${{ steps.login-ecr.outputs.registry }}/repo/redis:${{ github.sha }}
 
       # 8. Deploy to ecs
@@ -69,7 +69,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: rds
+          service: redis
           cluster: main-esc-cluster
 
       - name: Update ECS service
