@@ -1,4 +1,4 @@
-This project provides a hands-on example of building and deploying a scalable web application infrastructure on AWS using Terraform. It demonstrates practical techniques for managing infrastructure as code and automating deployments.
+This project provides a hands-on experience of building and deploying a scalable web application infrastructure on AWS using Terraform. It demonstrates practical techniques for managing infrastructure as code and automating deployments.
 
 ## Architecture
 
